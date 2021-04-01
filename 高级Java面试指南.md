@@ -78,14 +78,14 @@ public static void main(String[] args) {
 
 >如果整型字面量的值在 - 128 到 127 之间，那么不会 new 新的 Integer 对象，而是直接引用常量池中的 Integer 对象.
 >
->Integer f1 = 100;java在编译的时候,被翻译成-> Integer f1 = Integer.valueOf(127);
+>Integer f1 = 100;java在编译的时候,被翻译成-> Integer f1 = Integer.valueOf(100);
 
 ### **equals、== 和 hashCode**
 
 **（1）==比较基本数据类型和引用类型的区别？ **
 
 - 基本数据类型比较的是他们的值，引用类型（类、接口、数组）比较的是他们在内存中的存放地址；
-- ==是比较地址，equals是比较地址中的值
+- 引用类型==是比较地址，equals是比较地址中的值
 
 **（2）String中equals方法判断相等的步骤？**
 
@@ -111,7 +111,7 @@ public static void main(String[] args) {
 
 **（3）hashCode与equals联系以及作用？**
 
-- 解决冲突：当集添加新元素，先调用元素hashCode方法定位应防止物理位置，若位置上没有元素，则直接存储，否则调用位置上元素的equals方法与新元素进行比较，相同则不存储，不相同则存储其他位置。
+- 解决冲突：当集合添加新元素，先调用元素hashCode方法定位物理位置，若位置上没有元素，则直接存储，否则调用位置上元素的equals方法与新元素进行比较，相同则不存储，不相同则存储其他位置。
 
 > 如果两个对象equals，Java运行时环境会认为他们的hashcode一定相等；
 > 如果两个对象不equals，他们的hashcode有可能相等；
@@ -122,9 +122,9 @@ public static void main(String[] args) {
 
 **（1）序列化的实现方式有哪些，有什么区别，代码如何实现？**
 
-- 实现Serializable接口
+- 实现Serializable（可序列化）接口
 
-- 实现Externalizable接口，实现writeExternal、readExternal方法
+- 实现Externalizable（可外部化）接口，实现writeExternal、readExternal方法
 
 - 区别：
 
@@ -183,10 +183,11 @@ public void readExternal(ObjectInput in) throws IOException, ClassNotFoundExcept
 }
 
 public static void main(String[] args) throws IOException, ClassNotFoundException {
-    try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("ExPerson.txt"));
-         ObjectInputStream ois = new ObjectInputStream(new FileInputStream("ExPerson.txt"))) {
-      	oos.writeObject(new ExPerson("brady", 23));
-      	ExPerson ep = (ExPerson) ois.readObject();
+	try {
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("ExPerson.txt"));
+        OjectInputStream ois = new ObjectInputStream(new FileInputStream("ExPerson.txt"));
+        oos.writeObject(new ExPerson("brady", 23));
+        ExPerson ep = (ExPerson) ois.readObject();
         System.out.println(ep);
     }
 }
@@ -214,7 +215,7 @@ public static void main(String[] args) throws IOException, ClassNotFoundExceptio
 
 **（4）private static final long serialVersionUID = 1L;的作用是什么？**
 
-- 在进行序列化工作时，会将serialVersioinUid与所要序列化的目标一起序列化，这样一来，在反序列化的过程中会使用被序列化的serialVersioinUid与类中的serialVersioinUid对比，如果两者相等，则反序列化成功，否则，反序列化失败。
+- 在进行序列化工作时，会将serialVersioinUID与所要序列化的目标一起序列化，这样一来，在反序列化的过程中会使用被序列化的serialVersioinUID与类中的serialVersioinUID对比，如果两者相等，则反序列化成功，否则，反序列化失败。
 
   > 假设Person类序列化之后，从A端传输到B端，然后在B端进行反序列化。在序列化Person和反序列化Person的时候，A端和B端都存在一个相同的类。若B端这个类的serialVersionUID与A端不同，则B端反序列化失败。
 
@@ -1790,19 +1791,14 @@ Spring AOP 的底层使用的是动态代理，有两种实现方式：
 
 > 一般是平级同事，需要了解面试官和面试者未来工作的关系，以及他想要从自我介绍中了解什么？
 >
-> 时间：3-4分钟
+> 时间：3分钟之内
 >
 > 经历简介：个人信息、教育背景、职业生涯、工作年限、项目经历、技术总结
 >
 > 凸显技术经验能力（技术栈、技术实践项目经验）、学习思考能力
 >
-> 例：面试官你好，我叫XXX，17年毕业于烟台大学软件工程专业，距今已有3年多的Java开发经验，16年11月到19年2月在阿里金融参与P2P金融项目开发，后来入职京东参与电商、新零售、ERP等项目开发至今。
+> 例：面试官好，我叫XXX，17年毕业于烟台大学软件工程专业，大四实习到19年三月在一家互联网金融公司做P2P项目，主要负责银行存管，用户中心和标的管理相关的开发。后来入职酒仙网参与新零售项目开发，目前主要负责门店和人员管理，茅台及审计数据上报相关的开发工作。公司目前的技术架构主要包括SpringBoot、SpringCloud、MyBatis、MySQL、Redis、RabbitMQ、Zookeeper等。平时我喜欢看看书，写写个人博客，最近也在学习容器相关的知识，学习之余，我喜欢弹钢琴，画画，打羽毛球。
 > 
-> 我第一家公司的项目主要是互联网金融项目，前期为单体服务结构，后拆分为微服务结构，我在其中主要负责银行存管模块，用户服务模块和标的管理模块的开发，实现了多家第三方对接和标的自动上下架等。
->
-> 第二家公司主要是酒类电商及新零售项目，以业务划分微服务，并实现分布式管理，我负责了新零售官网数据对接、茅台数据上报、销售人员爆品奖励、评价管理、成本价计算、电子价签、ERP多个模块开发，为公司上市准备了审批数据，并实现了首家茅台数据的无误上报。
->
-> 我经常用的框架和中间件有SpringBoot、SpringCloud、MyBatis、MySQL、SQL Server、Redis、RabbitMQ、Zookeeper等，因为最近容器技术兴起，并且比较适合我们这种模块多配置多节点多的项目结构，所以最近也在学习容器相关的知识，学习之余，我也喜欢弹弹钢琴，画画，打羽毛球。
 
 ### 2.项目的业务场景，系统架构，工作职责
 
