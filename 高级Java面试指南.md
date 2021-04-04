@@ -1716,11 +1716,102 @@ Spring AOP 的底层使用的是动态代理，有两种实现方式：
 
 **（1）SpringBoot的启动过程是怎样的？**
 
+**第一阶段：创建SpringApplication**
 
+- **根据classpath判断WebApplicationType**
 
+  > SpringMVC本质上是依赖于SpringBoot的starter-web启动的，starter-web会下载Spring MVC启动所需要的所有相关包，就会包括DispatcherServlet，于是判断WebApplicationType为SERVLET；
 
+- **初始化初始化器ApplicationContextInitializer。**以后会向容器中注册属性
 
+- **初始化监听器ApplicationListener。**用以之后监听启动后的事件广播，以便做其他操作
 
+> 从spring.factories中加载所有Spring容器需要初始化的启动器和监听器；
+
+- **获取MainApplication的类**
+
+```java
+public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
+   this.resourceLoader = resourceLoader;// 获取启动类
+   Assert.notNull(primarySources, "PrimarySources must not be null");// 判断加载类是否为NULL
+   this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
+   this.webApplicationType = deduceWebApplicationType();// 判断WebApplicationType
+   setInitializers((Collection) getSpringFactoriesInstances(
+         ApplicationContextInitializer.class));// 加载启动器
+   setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));//加载监听器
+   this.mainApplicationClass = deduceMainApplicationClass();// 获取main函数调用的类
+}
+```
+
+**第二阶段：执行run()方法**
+
+- **创建StopWatch**。用以做监听记录器，记录任务执行时间
+
+- **获取SpringApplicatioinRunListeners并开启启动监听**
+
+  > 通过sping.factories获取，主要是EventPublishingRunListener，用以做事件的发布推送
+
+- **准备环境变量，配置信息，系统属性等**
+
+- **根据WebApplicationType创建ApplicationContext容器上下文**
+
+- **prepareContext。**执行之前的Initializer初始化，传入参数，加载主Bean
+
+- **refreshContext。**启动Web Server
+
+- **afterRefresh。**执行初始化完成后要做的操作
+
+- **发布启动完成的Event事件**
+
+- **调用Listener的方法，启动所有的监听**
+
+```java
+public ConfigurableApplicationContext run(String... args) {
+   StopWatch stopWatch = new StopWatch();// 监听记录器
+   stopWatch.start();// 启动监听记录器
+   ConfigurableApplicationContext context = null;
+   Collection<SpringBootExceptionReporter> exceptionReporters = new ArrayList<>();
+   configureHeadlessProperty();// 配置setProperty能力
+   SpringApplicationRunListeners listeners = getRunListeners(args);// 获取所有的监听器
+   listeners.starting();// 开启启动监听
+   try {
+      ApplicationArguments applicationArguments = new DefaultApplicationArguments(
+            args);
+      ConfigurableEnvironment environment = prepareEnvironment(listeners,
+            applicationArguments);// 设置环境变量
+      configureIgnoreBeanInfo(environment);// 设置忽略的Bean信息
+      Banner printedBanner = printBanner(environment);// 打印启动Banner
+      context = createApplicationContext();// 创建ApplicationContext
+      exceptionReporters = getSpringFactoriesInstances(
+            SpringBootExceptionReporter.class,
+            new Class[] { ConfigurableApplicationContext.class }, context);// 排查异常
+      prepareContext(context, environment, listeners, applicationArguments,
+            printedBanner);// 准备ApplicationContext
+      refreshContext(context);// 刷新ApplicationContext
+      afterRefresh(context, applicationArguments);// 做最后的收尾工作
+      stopWatch.stop();// 停止监听记录
+      if (this.logStartupInfo) {
+         new StartupInfoLogger(this.mainApplicationClass)
+               .logStarted(getApplicationLog(), stopWatch);
+      }
+      listeners.started(context);// 发布启动完成的事件
+      callRunners(context, applicationArguments);// 指示应该启动的所有的相关Bean
+   }
+   catch (Throwable ex) {
+      handleRunFailure(context, ex, exceptionReporters, listeners);
+      throw new IllegalStateException(ex);
+   }
+
+   try {
+      listeners.running(context);// 调用监听者方法，启动所有的监听
+   }
+   catch (Throwable ex) {
+      handleRunFailure(context, ex, exceptionReporters, null);
+      throw new IllegalStateException(ex);
+   }
+   return context;
+}
+```
 
 # 六、消息队列
 
