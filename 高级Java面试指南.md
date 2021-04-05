@@ -1058,7 +1058,7 @@ public ThreadPoolExecutor(
 
   > InnoDB 和 MyISAM的区别：
   >
-  > InnoDB 支持事务；而 MyISAM 不支持事物，强调的是性能，查询速度更快；
+  > InnoDB 支持事务；而 MyISAM 不支持事务，强调的是性能，查询速度更快；
   >
   > InnoDB 支持行级锁和表级锁（默认行级锁），而 MyISAM 只支持表级锁；
   >
@@ -1813,11 +1813,90 @@ public ConfigurableApplicationContext run(String... args) {
 }
 ```
 
-# 六、消息队列
+# 六、Dubbo
+
+### Dubbo的线程工作模型
+
+
+- Boss线程：用来接收处理客户端的链接请求
+
+- Worker线程：处理IO读写事件
+
+- IO线程池：Boss线程池Worker线程池统称，旨client建立连接到发送request过程
+	> all：一律进工作线程池
+	> direct：一律进IO线程池
+	> message（推荐使用）：除了请求和响应走工作线程池，其他都是IO线程池
+	> execution：除了请求，其他都走IO线程池
+	>  connection：连接和断连进队列，其他都走工作线程池
+
+- 业务工作线程池
+
+  > fixed：固定大小线程池
+  >
+  > cached：缓存线程池，一分钟后释放
+  >
+  > limited：可伸缩线程池，只会增长不会收缩
+  >
+  > eager：min到max，超过后进队列，队列满后拒绝
+
+
+## Dubbo的序列化方式有哪些？
+
+- Hessian （默认）
+- fastjson
+- jdk
+- protobuf
+- protostuf（推荐）
+
+### SpringCloud与Dubbo的区别
+
+| 核心要素       | Dubbo            | SpringCloud                                                  |
+| -------------- | ---------------- | ------------------------------------------------------------ |
+| 服务注册中心   | Zookeeper、Redis | Spring Cloud Netflix Eureka                                  |
+| 服务调用方式   | RPC              | HTTP REST API                                                |
+| 服务网关       | 无               | Spring Cloud Netflix Eureka                                  |
+| 断路器         | 不完善           | Spring Cloud Netflix Hystrix                                 |
+| 分布式配置     | 无               | Spring Cloud Config                                          |
+| 分布式追踪系统 | 无               | Spring Cloud Sleuth                                          |
+| 消息总线       | 无               | Spring Cloud Bus                                             |
+| 数据流         | 无               | Spring Cloud Stream 基于Redis，Rabbit，Kafka实现的消息微服务 |
+| 批量任务       | 无               | Spring Cloud Task                                            |
+
+### Dubbo的服务暴露，发现以及调用过程
+
+- 服务暴露
+
+  > 通过@Service注解，扫描实现类并封装成ServiceBean；
+  >
+  > 经过一系列的配置检查校验后，加载注册中心，结合配置封装Exporter，缓存并生成注册地址URL；
+  >
+  > 生成ProviderModel，并初始化，实现服务暴露；
+  >
+  > 本质上就是将自己本地的ServiceBean及配置组成一个对应的URL地址注册到注册中心上；
+
+- 服务发现及调用
+
+  > 通过@Reference注解，扫描并生成ReferenceBean；
+  >
+  > 调用ZookeeperRegistry.doRegister注册服务，完成消费者服务注册；
+  >
+  > 通过注册目录(RegistryDirectory)订阅subscribeUrl通知，通过读取缓存中Exporter的Key，完成服务发现；
+  >
+  > 调用时通过代理的方式生成ReferenceBean进行服务调用；
+
+### RPC和HTTP的区别
+
+- RPC要求服务提供方和服务调用方都需要使用相同的技术，要么都hessian，要么都dubbo
+- 而http无需关注语言的实现，只需要遵循rest规范
+- RPC的开发要求较多，像Hessian框架还需要服务器提供完整的接口代码(包名.类名.方法名必须完全一致)，否则客户端无法运行
+- Hessian只支持POST请求
+-  Hessian只支持JAVA语言
+
+# 七、消息队列
 
 
 
-# 七、设计模式
+# 八、设计模式
 
 ![img](https://img1.sycdn.imooc.com/5e9da9820001cdd513290562.png)
 
@@ -1874,7 +1953,7 @@ public ConfigurableApplicationContext run(String... args) {
 >}
 >```
 
-# 八、面试问题
+# 九、面试问题
 
 ## 一面
 
