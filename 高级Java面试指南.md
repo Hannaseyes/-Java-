@@ -1749,7 +1749,7 @@ public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySourc
 
 - **获取SpringApplicatioinRunListeners并开启启动监听**
 
-  > 通过sping.factories获取，主要是EventPublishingRunListener，用以做事件的发布推送
+  > 通过spring.factories获取，主要是EventPublishingRunListener，用以做事件的发布推送
 
 - **准备环境变量，配置信息，系统属性等**
 
@@ -1840,7 +1840,7 @@ public ConfigurableApplicationContext run(String... args) {
   > eager：min到max，超过后进队列，队列满后拒绝
 
 
-## Dubbo的序列化方式有哪些？
+### Dubbo的序列化方式有哪些？
 
 - Hessian （默认）
 - fastjson
