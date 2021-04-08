@@ -1163,7 +1163,7 @@ public ThreadPoolExecutor(
   > 这句SQL语句的执行过程就会变为:
 >
 	> 　　**通过非聚集索引index_birthday_and_user_name查找birthday等于1991-11-1的叶节点的内容，然而， 叶节点中除了有user_name表主键ID的值以外， user_name字段的值也在里面， 因此不需要通过主键ID值的查找数据行的真实所在， 直接取得叶节点中user_name的值返回即可**。 通过这种覆盖索引直接查找的方式， 可以省略不使用覆盖索引查找的后面两个步骤， 大大的提高了查询性能。
-	
+
 - **小表驱动大表**
 
 ### 索引调优 explain
@@ -1965,6 +1965,13 @@ public ConfigurableApplicationContext run(String... args) {
 - Docker相当于运行于操作系统的一个进程，启动很快，轻量级
 - 虚拟机是个完整的操作系统，启动时间，占用资源，通信过程都更繁琐，重量级
 
+### 3.什么是云原生？有什么优势？
+
+- 微服务+DevOps+持续交付+容器化
+- 自动化，模糊开发、测试、运维的边界，成本可控，弹性扩容
+
+### 4.k8s的原理是怎样的？
+
 # 十、大数据
 
 ### 大数据基础思想：MapReduce
@@ -1991,10 +1998,7 @@ Spark SQL、Spark Streaming（窗口式流式处理）、Spark MLlib（机器学
 
 ### HBase原理
 
-
-
 # 十一、面试问题
-
 ## 一面
 
 ### 1.自我介绍
