@@ -1133,38 +1133,37 @@ public ThreadPoolExecutor(
   ![WX20210310-175558@2x](/Users/wanghanqing/Documents/WX20210310-175558@2x.png)
 
 - **覆盖索引**
-
-  >​	简单来说，就是where的列和select的列一致，不需要回表查询，通过索引就可以查出所有的数据；	
+	> 简单来说，就是where的列和select的列一致，不需要回表查询，通过索引就可以查出所有的数据；
   >
-  >​	不管以任何方式查询表， 最终都会利用主键通过聚集索引来定位到数据， 聚集索引（主键）是通往真实数据所在的唯一路径。
+  > 不管以任何方式查询表， 最终都会利用主键通过聚集索引来定位到数据， 聚集索引（主键）是通往真实数据所在的唯一路径。	
   >
-  >​	然而，有一种例外可以不使用聚集索引就能查询出所需要的数据，这种非主流的方法 称之为「**覆盖索引**」查询， **也就是平时所说的复合索引或者多字段索引查询**。文章上面的内容已经指出， 当为字段建立索引以后， 字段中的内容会被同步到索引之中， 如果为一个索引指定两个字段， 那么这个两个字段的内容都会被同步至索引之中。
+  > 然而，有一种例外可以不使用聚集索引就能查询出所需要的数据，这种非主流的方法 称之为「**覆盖索引**」查询， **也就是平时所说的复合索引或者多字段索引查询**。文章上面的内容已经指出， 当为字段建立索引以后， 字段中的内容会被同步到索引之中， 如果为一个索引指定两个字段， 那么这个两个字段的内容都会被同步至索引之中。
   >
-  >``` sql
-  >//建立索引
-  >create index index_birthday on user_info(birthday);
-  >//查询生日在1991年11月1日出生用户的用户名
-  >select user_name from user_info where birthday = '1991-11-1';
-  >```
+  > ``` sql
+  > //建立索引
+  > create index index_birthday on user_info(birthday);
+  > //查询生日在1991年11月1日出生用户的用户名
+  > select user_name from user_info where birthday = '1991-11-1';
+  > ```
   >
-  >这句SQL语句的执行过程如下:
+  > 这句SQL语句的执行过程如下:
   >
-  >​	首先，通过非聚集索引index_birthday查找birthday等于1991-11-1的所有记录的主键ID值；
+  > ​	首先，通过非聚集索引index_birthday查找birthday等于1991-11-1的所有记录的主键ID值；
   >
-  >　然后，通过得到的主键ID值执行聚集索引查找，找到主键ID值对就的真实数据（数据行）存储的位置；
+  > 　然后，通过得到的主键ID值执行聚集索引查找，找到主键ID值对就的真实数据（数据行）存储的位置；
   >
-  >　最后， 从得到的真实数据中取得user_name字段的值返回， 也就是取得最终的结果。
+  > 　最后， 从得到的真实数据中取得user_name字段的值返回， 也就是取得最终的结果。
   >
-  >　我们把birthday字段上的索引改成双字段的覆盖索引。
+  > 　我们把birthday字段上的索引改成双字段的覆盖索引。
   >
-  >``` sql
-  >create index index_birthday_and_user_name on user_info(birthday, user_name);
-  >```
+  > ``` sql
+  > create index index_birthday_and_user_name on user_info(birthday, user_name);
+  > ```
   >
-  >这句SQL语句的执行过程就会变为:
-  >
-  >　　**通过非聚集索引index_birthday_and_user_name查找birthday等于1991-11-1的叶节点的内容，然而， 叶节点中除了有user_name表主键ID的值以外， user_name字段的值也在里面， 因此不需要通过主键ID值的查找数据行的真实所在， 直接取得叶节点中user_name的值返回即可**。 通过这种覆盖索引直接查找的方式， 可以省略不使用覆盖索引查找的后面两个步骤， 大大的提高了查询性能。
-
+  > 这句SQL语句的执行过程就会变为:
+>
+	> 　　**通过非聚集索引index_birthday_and_user_name查找birthday等于1991-11-1的叶节点的内容，然而， 叶节点中除了有user_name表主键ID的值以外， user_name字段的值也在里面， 因此不需要通过主键ID值的查找数据行的真实所在， 直接取得叶节点中user_name的值返回即可**。 通过这种覆盖索引直接查找的方式， 可以省略不使用覆盖索引查找的后面两个步骤， 大大的提高了查询性能。
+	
 - **小表驱动大表**
 
 ### 索引调优 explain
@@ -1264,6 +1263,7 @@ public ThreadPoolExecutor(
 > 执行完业务代码后，可以通过 delete 命令删除 key。
 
 - **基于 Zookeeper 实现分布式锁。** 利用临时节点与 watch 机制。每个锁占用一个普通节点 /lock，当需要获取锁时在 /lock 目录下创建一个临时节点，创建成功则表示获取锁成功，失败则 watch/lock 节点，有删除操作后再去争锁。临时节点好处在于当进程挂掉后能自动上锁的节点自动删除即取消锁。
+- 可以从性能，锁是否可以及时释放，是否可重入，是否有单点问题
 
 **（3）两个事务做如下操作，id 是表 t 的主键，num初始值为3，那么事务 2 的 update 后再 select 的值是多少呢？**
 
@@ -1917,39 +1917,38 @@ public ConfigurableApplicationContext run(String... args) {
 
   >```java
   >public class SingletonTest {
-  >        // 1. 类对象
-  >        private static SingletonTest instance = new  SingletonTest();
-  >
+  >       // 1. 类对象
+  >       private static SingletonTest instance = new  SingletonTest();
+  >	
   >       // 2. 构造函数 设置为 私有权限，禁止他人创建实例
-  >        private SingletonTest() {
-  >        }
-  >
-  >        // 3. 通过调用静态方法获得单例
-  >        public static SingletonTest newInstance() {
-  >            return instance;
+  >       private SingletonTest() {}
+  >       
+  >  // 3. 通过调用静态方法获得单例
+  >       public static SingletonTest newInstance() {
+  >       	return instance;
   >       }
-  > }
+  >     }
   > ```
   > 
-
+  
 - **懒汉式单例**
 
 >```java
 >public class SingletonTest {
->    // 1. 创建静态内部类
->    private static class SingletonTestHolder {
->            // 静态内部类里创建单例，JVM只会加载1遍，Java虚拟机保证了线程安全性
->            private static SingletonTest instance = new SingletonTest();
->    }
+>      // 1. 创建静态内部类
+>      private static class SingletonTestHolder {
+>         // 静态内部类里创建单例，JVM只会加载1遍，Java虚拟机保证了线程安全性
+>         private static SingletonTest instance = new SingletonTest();
+>      }
 >
->    // 2. 构造函数设置为私有权限，禁止他人创建实例
->    private SingletonTest() {}
+>    	// 2. 构造函数设置为私有权限，禁止他人创建实例
+>    	private SingletonTest() {}
 >
->    // 3. 延迟加载，按需创建
->    public static  SingletonTest getInstance() {
->      // 在调用装载被初始化时，会初始化它的静态域，从而创建单例；
->          return SingletonTestHolder.instance;
->        }
+>      // 3. 延迟加载，按需创建
+>      public static  SingletonTest getInstance() {
+>         // 在调用装载被初始化时，会初始化它的静态域，从而创建单例；
+>         return SingletonTestHolder.instance;
+>       }
 >}
 >```
 
@@ -1966,7 +1965,35 @@ public ConfigurableApplicationContext run(String... args) {
 - Docker相当于运行于操作系统的一个进程，启动很快，轻量级
 - 虚拟机是个完整的操作系统，启动时间，占用资源，通信过程都更繁琐，重量级
 
-# 十、面试问题
+# 十、大数据
+
+### 大数据基础思想：MapReduce
+
+![WX20210408-091256@2x](/Users/wanghanqing/Documents/WX20210408-091256@2x.png)
+
+> 本质上是通过Map映射分词之后的单词数量，Reduce去做数量的加和处理
+
+### HDFS（Hadoop分布式文件系统）核心原理
+
+### Hive原理
+
+使用SQL操作MapReduce
+
+### Spark家族
+
+Spark比Map Reduce更快，Reduce和Map的接洽机制，Reduce输出直接作为Map输入，数据依赖内存优先，而非HDFS优先
+
+Spark SQL、Spark Streaming（窗口式流式处理）、Spark MLlib（机器学习框架）
+
+（1）Spark Streaming和Flink的区别
+
+- 窗口式和流式的区别
+
+### HBase原理
+
+
+
+# 十一、面试问题
 
 ## 一面
 
