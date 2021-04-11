@@ -434,9 +434,39 @@ public class User implements  Cloneable {
   | JDK动态代理   | 代理类与委托类实现同一接口，主要是通过代理类实现InvocationHandler并重写invoke方法来进行动态代理的，在invoke方法中将对方法进行增强处理 | 不需要硬编码接口，代码复用率高                               | 只能够代理实现了接口的委托类                                 | 底层使用反射机制进行方法的调用                             |
   | CGLIB动态代理 | 代理类将委托类作为自己的父类并为其中的非final委托方法创建两个方法，一个是与委托方法签名相同的方法，它在方法中会通过super调用委托方法；另一个是代理类独有的方法。在代理方法中，它会判断是否存在实现了MethodInterceptor接口的对象，若存在则将调用intercept方法对委托方法进行代理 | 可以在运行时对类或者是接口进行增强操作，且被代理的类无需实现接口 | 不能对final类以及final方法进行代理                           | 底层将方法全部存入一个数组中，通过数组索引直接进行方法调用 |
 
-  ---
+
+**（5）生成随机数的方法有哪些？**
+
+- 一种是调用 Math 类的 random() 方法，一种是使用 Random 类。
+
+> Random 类提供了丰富的随机数生成方法，可以产生 boolean、int、long、float、byte 数组以及 double 类型的随机数，这是它与 random() 方法最大的不同之处。random() 方法只能产生 double 类型的 0~1 的随机数。
+>
+> Math 类的 random() 方法没有参数，它默认会返回大于等于 0.0、小于 1.0 的 double 类型随机数，即 0<=随机数<1.0。对 random() 方法返回的数字稍加处理，即可实现产生任意范围随机数的功能。
 
 ## 2.集合
+
+**如何实现遍历?**
+
+- 如果是集合，可以使用iterator
+
+- 如何是兑现，则需要手动实现iterable接口，重写iterator方法
+
+  ```java
+  @Override
+  public Iterator<T> iterator() {
+      return new Iterator<T>() {
+          @Override
+          public boolean hasNext() {
+              return true;
+          }
+  
+          @Override
+          public T next() {
+              return list.get((int) (list.size() * Math.random()));
+          }
+      };
+  }
+  ```
 
 ### Map
 
