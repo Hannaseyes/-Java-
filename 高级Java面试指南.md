@@ -275,7 +275,19 @@ public static void main(String[] args) throws IOException, ClassNotFoundExceptio
 - break + 标签。在最外层循环前加一个标签如 label，然后在最里层的循环使用用 break label；
 - 通过捕获异常；
 - 通过标置变量；
-
+```java
+public static void main(String[] args) {
+    ok:
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            System.out.println("i=" + i + ",j=" + j);
+            if (j == 5) {
+                break ok;
+            }
+        }
+    }
+}
+```
 **（2）switch语句能否作用在byte上，能否作用在long上，能否作用在String上？**
 
 - 可作用于char byte short int 以及对应的包装类 ；
@@ -634,10 +646,18 @@ LinkedHashMap：HashMap的子类，底层维护一个双向链表，适合实现
 **（11）为什么 ConcurrentHashMap 的 key 和 value 不能为 null？为什么 HashMap 可以呢？**
 
 - 会产生二义性：这个key从来没有在map中映射过；这个key的value在设置的时候，就是null；
-
 - HashMap在单线程中可以用hashMap.containsKey(key)方法来区分含义；
-
 - 线程A调用concurrentHashMap.get(key)方法，有一个线程B执行了concurrentHashMap.put(key,null)的操作，于是无法区分含义；
+
+**（12）Map的Hash值是怎么计算的？为什么这么计算？为什么HashMap的底层容量要设置成2的次幂？**
+
+- ```java
+  // 通过key的hashCode值与hashCode值的高16位进行异或运算得到
+  // 主要是为了让高16位也参与运算，大部分情况下高位参与不到计算，为了平衡需要和高位异或
+  (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+  ```
+
+- 因为在计算数据数组存储位置的时候使用的是(n - 1) & hash，n是目前的数组容量，hash是当前key的hash值，当n为2的次幂的时候，n-1的二进制全为1，与hash进行异或的结果最为散列；
 
 ### List和Set
 
@@ -717,6 +737,25 @@ LinkedHashMap：HashMap的子类，底层维护一个双向链表，适合实现
   >```
   >
   >HashSet的put方法，本质上就是通过HashMap的put方法是否返回null来判断是否插入成功；
+
+**（8）多线程场景下如何使用 ArrayList？**
+
+ArrayList 不是线程安全的，如果遇到多线程场景，可以通过 Collections 的 synchronizedList 方法将其转换成线程安全的容器后再使用。例如：
+
+```java
+List<String> synchronizedList = Collections.synchronizedList(list);
+synchronizedList.add("aaa");
+synchronizedList.add("bbb");
+
+for (int i = 0; i < synchronizedList.size(); i++) {
+    System.out.println(synchronizedList.get(i));
+}
+```
+
+**（9）ArrayList中elementData为什么被transient修饰？**
+
+> ArrayList在序列化的时候会调用writeObject，直接将size和element写入ObjectOutputStream；反序列化时调用readObject，从ObjectInputStream获取size和element，再恢复到elementData。
+> 为什么不直接用elementData来序列化，而采用上诉的方式来实现序列化呢？原因在于elementData是一个缓存数组，它通常会预留一些容量，等容量不足时再扩充容量，那么有些空间可能就没有实际存储元素，采用上诉的方式来实现序列化时，就可以保证只序列化实际存储的那些元素，而不是整个数组，从而节省空间和时间。
 
 ## 3.JVM
 
@@ -1137,7 +1176,7 @@ public ThreadPoolExecutor(
 
 **（3）什么情况下索引会失效？**
 
-- 条件中有 or；
+- 条件中有 or，只要其中一个条件没有索引，其他字段有索引也不会使用；
 - like 查询（以 % 开头）；
 - 如果列类型是字符串，那一定要在条件中将数据使用引号引用起来，否则不使用索引；
 - 对列进行函数运算（如 where md5 (password) = “xxxx”）；
@@ -1923,6 +1962,78 @@ public ConfigurableApplicationContext run(String... args) {
 -  Hessian只支持JAVA语言
 
 # 七、消息队列
+
+### 1.RabbitMQ 中的 broker 是指什么？cluster 又是指什么？
+
+`broker` 是指一个或多个 `erlang node` 的逻辑分组，且 `node` 上运行着 `RabbitMQ` 应用程序。
+`cluster` 是在 `broker` 的基础之上，增加了 `node` 之间共享元数据的约束。
+
+###  2.channel、exchange 和 queue 是逻辑概念，还是对应着进程实体？分别起什么作用？
+
+**Queue** 具有自己的 **erlang** 进程；**exchange** 内部实现为保存 binding 关系的查找表；channel 是实际进行路由工作的实体，即负责按照 routing_key 将 message 投递给 queue 。由 AMQP 协议描述可知，channel 是真实 TCP 连接之上的虚拟连接，所有 AMQP 命令都是通过 channel 发送的，且每一个 channel 有唯一的 ID。一个 channel 只能被单独一个操作系统线程使用，故投递到特定 channel 上的 message 是有顺序的。但一个操作系统线程上允许使用多个 channel 。
+
+Server：又称为broker，接受客户端连接，RabbitMQ 节点；
+Connection: 连接,应用程序与brokder建立网络连接;
+channel：网络通道，几乎所有的操作都是在channel中进行的，是进行消息对象的通道，客户端可以建立 多个通道，每一个channel表示一个会话任务
+Virtual Host：虚拟机，一个节点由若干个虚拟机组成；
+Exchange：交换机，一个虚拟机由若干个交换机组成；
+Queue：消息队列，和交换机通过routing key绑定
+
+### 3.vhost 是什么？起什么作用？
+
+vhost本质上是一个mini版的RabbitMQ服务器，拥有自己的队列、绑定、交换器和权限控制；
+vhost通过在各个实例间提供逻辑上分离，允许你为不同应用程序安全保密地运行数据；
+vhost是AMQP概念的基础，必须在连接时进行指定，RabbitMQ包含了默认vhost：“/”；
+当在RabbitMQ中创建一个用户时，用户通常会被指派给至少一个vhost，并且只能访问被指派vhost内的队列、交换器和绑定，vhost之间是绝对隔离的。
+vhost可以理解为虚拟broker，即mini-RabbitMQ server，其内部均含有独立的queue、bind、exchange等，最重要的是拥有独立的权限系统，可以做到vhost范围内的用户控制。当然，从RabbitMQ全局角度，vhost可以作为不同权限隔离的手段(一个典型的例子，不同的应用可以跑在不同的vhost中)。
+
+### 消息怎么路由？
+
+从概念上来说，消息路由必须有三部分：**交换器**、**路由**、**绑定**。生产者把消息发布到交换器上；绑定决定了消息如何从路由器路由到特定的队列；消息最终到达队列，并被消费者接收。
+
+消息发布到交换器时，消息将拥有一个路由键（routing key），在消息创建时设定。
+通过队列路由键，可以把队列绑定到交换器上。
+消息到达交换器后，RabbitMQ会将消息的路由键与队列的路由键进行匹配（针对不同的交换器有不同的路由规则）。如果能够匹配到队列，则消息会投递到相应队列中；如果不能匹配到任何队列，消息将进入 “黑洞”。
+
+常用的交换器主要分为一下三种：
+
+- direct：如果路由键完全匹配，消息就被投递到相应的队列
+- fanout：如果交换器收到消息，将会广播到所有绑定的队列上
+- topic：可以使来自不同源头的消息能够到达同一个队列。使用topic交换器时，可以使用通配符。
+  比如：“*” 匹配特定位置的任意文本， “.” 把路由键分为了几部分，“#” 匹配所有规则等。
+  特别注意：发往topic交换器的消息不能随意的设置选择键（routing_key），必须是由"."隔开的一系列的标识符组成。
+
+### 什么是元数据？元数据分为哪些类型？包括哪些内容？与 cluster 相关的元数据有哪些？元数据是如何保存的？元数据在 cluster 中是如何分布的？
+
+在非 `cluster` 模式下，元数据主要分为 `Queue` 元数据（queue 名字和属性等）、`Exchange `元数据（exchange 名字、类型和属性等）、`Binding` 元数据（存放路由关系的查找表）、`Vhost `元数据（vhost 范围内针对前三者的名字空间约束和安全属性设置）。
+在 `cluster` 模式下，还包括 cluster 中 node 位置信息和 node 关系信息。元数据按照 erlang node 的类型确定是仅保存于 RAM 中，还是同时保存在 RAM 和 disk 上。元数据在 cluster 中是全 node 分布的。
+
+### 在单node 系统和多 node 构成的 cluster 系统中声明 queue、exchange ，以及进行 binding 会有什么不同？
+
+答：当你在单 node 上声明 queue 时，只要该 node 上相关元数据进行了变更，你就会得到 Queue.Declare-ok 回应；而在 cluster 上声明 queue ，则要求 cluster 上的全部 node 都要进行元数据成功更新，才会得到 Queue.Declare-ok 回应。另外，若 node 类型为 RAM node 则变更的数据仅保存在内存中，若类型为 disk node 则还要变更保存在磁盘上的数据。
+
+死信队列&死信交换器：DLX 全称（Dead-Letter-Exchange）,称之为死信交换器，当消息变成一个死信之后，如果这个消息所在的队列存在x-dead-letter-exchange参数，那么它会被发送到x-dead-letter-exchange对应值的交换器上，这个交换器就称之为死信交换器，与这个死信交换器绑定的队列就是死信队列。
+
+### rabbitmq 怎么避免消息丢失？
+
+- **消息持久化**
+  RabbitMQ 的消息默认存放在内存上面，如果不特别声明设置，消息不会持久化保存到硬盘上面的，如果节点重启或者意外crash掉，消息就会丢失。
+  所以就要对消息进行持久化处理。如何持久化，下面具体说明下：
+  要想做到消息持久化，必须满足以下三个条件，缺一不可。
+  1） Exchange 设置持久化
+  2）Queue 设置持久化
+  3）Message持久化发送：发送消息设置发送模式deliveryMode=2，代表持久化消息
+- **ACK确认机制**
+  多个消费者同时收取消息，比如消息接收到一半的时候，一个消费者死掉了(逻辑复杂时间太长，超时了或者消费被停机或者网络断开链接)，如何保证消息不丢？
+  这个使用就要使用Message acknowledgment 机制，就是消费端消费完成要通知服务端，服务端才把消息从内存删除。
+  这样就解决了，及时一个消费者出了问题，没有同步消息给服务端，还有其他的消费端去消费，保证了消息不丢的case。
+- **设置集群镜像模式**
+  1）单节点模式：最简单的情况，非集群模式，节点挂了，消息就不能用了。业务可能瘫痪，只能等待。
+  2）普通模式：默认的集群模式，某个节点挂了，该节点上的消息不能用，有影响的业务瘫痪，只能等待节点恢复重启可用（必须持久化消息情况下）。
+  3）镜像模式：把需要的队列做成镜像队列，存在于多个节点，属于RabbitMQ的HA方案
+  -**消息补偿机制**
+  消息补偿机制需要建立在消息要写入DB日志，发送日志，接受日志，两者的状态必须记录。
+  然后根据DB日志记录check 消息发送消费是否成功，不成功，进行消息补偿措施，重新发送消息处理。
 
 
 
